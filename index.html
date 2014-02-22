@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>UI component test</title>
+  </head>
+  <body>
+    <h1>The Rules</h1>
+    <ol>
+      <li>
+        <p>Only one piece of code is allowed to mutate a given subtree
+        of the DOM.  This is called <strong>owning</strong> a subtree.</p>
+        <p><em>Rationale</em>: the DOM is global state and accessible to
+        every piece of code.  As such, the usual principles for handling
+        global variables should be applied to prevent the problems
+        associated with global state.</p>
+      </li>
+      <li>
+        <p>All meaningful state is stored in the DOM.  Meaningful state
+        is state that carries a meaning for the application, e.g. for a
+        blogging application, state related to articles is most likely
+        considered meaningful.</p>
+        <p><em>Rationale</em>: Putting all meaningful state into the DOM
+        enables the server to generate the state and client to work with
+        this state.  It eliminates the need to serialize and deserialize
+        data (e.g. using JSON or XML).  Also, the user agent does not
+        need any capabilities beyond parsing HTML.</p>
+      </li>
+      <li>
+        <p>Pieces of code communicate through events, using the DOM as
+          the event bus.  Every public function should trigger events in
+          order to use this information from every part of the
+          application.  Public functions should be invokable by
+          triggering the appropriate event on the element <em>owned</em>
+          by this piece of code.</p>
+        <p><em>Rationale</em>: Triggering events for every function call
+        on the DOM allows for easy delegation using event bubbling.  By
+        making every public function available through the DOM, the DOM
+        becomes the single interface to interact with the
+        application.</p>
+      </li>
+    </ol>
+    <footer>
+      <a rel="license"
+      href="http://creativecommons.org/licenses/by-sa/4.0/deed.en_US"><img alt="Creative
+      Commons License" style="border-width:0"
+      src="http://i.creativecommons.org/l/by-sa/4.0/88x31.png"
+      /></a><br /><span xmlns:dct="http://purl.org/dc/terms/"
+      property="dct:title">ui-components</span>
+      by <span xmlns:cc="http://creativecommons.org/ns#"
+      property="cc:attributionName">Dario Hamidi</span> is licensed
+      under a <a rel="license"
+      href="http://creativecommons.org/licenses/by-sa/4.0/deed.en_US">Creative
+      Commons Attribution-ShareAlike 4.0 International License</a>.
+    </footer>
+  </body>
+</html>
