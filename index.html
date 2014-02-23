@@ -47,8 +47,23 @@
       framework.  A possible application of this rules, based only on
       jQuery is given here for a simple todo-list application.</p>
     <div class="todo-application">
-      <div class="todo-item action-create">
-        <form method="POST" action="todos">
+      <div class="todo-list">
+        <!-- the template for new item -->
+        <script type="text/x-html" class="todo-item-template">
+          <li class="todo-item is-not-done">
+            <input type="checkbox" name="done" class="todo-item-done" />
+            <div class="todo-item-content">
+            </div>
+            <button class="action-delete">X</button>
+          </li>
+        </script>
+
+        <h1>Todos
+          <span class="todo-list-done-count">0</span>
+          / <span class="todo-list-total-count">0</span>
+        </h1>
+
+        <form class="todo-item action-create" method="POST" action="todos">
           <fieldset>
             <legend>Create a new todo item</legend>
             <input type="hidden" name="_method" value="PUT" />
@@ -56,19 +71,7 @@
             <input type="submit" value="Add" />
           </fieldset>
         </form>
-      </div>
-      <div class="todo-list">
-        <script type="text/x-html" class="todo-item-template">
-          <li class="todo-item">
-            <input type="checkbox" name="done" class="todo-item-done" />
-            <div class="todo-item-content">
-            </div>
-          </li>
-        </script>
-        <h1>Todos
-          <span class="todo-list-done-count">0</span>
-          / <span class="todo-list-total-count">0</span>
-        </h1>
+
         <ul class="todo-item-list">
         </ul>
       </div>
