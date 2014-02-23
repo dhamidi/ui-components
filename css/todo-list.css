@@ -1,0 +1,15 @@
+.todo-item-list {
+    margin: 0;
+    padding: 0;
+}
+
+.todo-list h1 {
+    font-size: 21px;
+    margin-top: 0px;
+    margin-bottom: 0.5em;
+}
+
+.todo-list {
+    font-size: 14px;
+    font-family: sans-serif;
+}
