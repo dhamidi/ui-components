@@ -18,6 +18,7 @@
         this.$root = $({});
       }
 
+      this._update();
       initializer.apply(this, args);
       this._listen();
     }
@@ -32,6 +33,7 @@
 
     definition._accessible = [];
     definition._events     = $.extend({}, definition._events);
+    definition._references = $.extend({}, definition._references);
 
     for (method in definition) {
       if ($.isFunction(definition[method]) && isPublic.test(method)) {
@@ -41,6 +43,7 @@
     }
 
     definition._listen = listen;
+    definition._update = updateReferences;
 
     return definition;
   }
@@ -63,25 +66,46 @@
     };
   }
 
-  function listen() {
-    var event, descriptor, handler;
+  function updateReferences() {
+    var refname, selector;
 
+    for (refname in this._references) {
+      selector = this._references[refname];
+      this["$" + refname] = this.$root.find(selector);
+    }
+  }
+
+  function listen() {
     this.$root.off("." + this._namespace);
 
-    this._accessible.forEach(function(event) {
-      this.$root.on("do-" + event + "." + this._namespace,
-                    this[":on:"+event].bind(this));
-    }, this);
+    exposeMethods(this, this._accessible);
+    bindEvents(this, this._events);
+  }
 
-    for (event in this._events) {
-      descriptor = event.split(/\s+/);
+  function exposeMethods(instance, eventList) {
+    var ns = "." + instance._namespace;
+
+    eventList.forEach(function(event) {
+      instance.$root.on("do-" + event + ns,
+                        instance[":on:"+event].bind(instance));
+    }, instance);
+  }
+
+  function bindEvents(instance, eventMap) {
+    var eventHandler, eventName, descriptor, handlerFn,
+        ns = "." + instance._namespace;
+
+    for (eventName in eventMap) {
+      eventHandler = eventMap[eventName];
+      descriptor   = eventName.split(/\s+/);
+
       if (descriptor.length < 2) continue;
-      handler    = this[this._events[event]].bind(this);
 
-      this.$root.on(descriptor[0] + "." + this._namespace,
-                    descriptor[1],
-                    createEventHandler(handler));
+      handlerFn    = instance[eventHandler].bind(instance);
 
+      instance.$root.on(descriptor[0] + ns,
+                    descriptor.slice(1).join(" "),
+                    createEventHandler(handlerFn));
     }
   }
 
@@ -97,12 +121,11 @@
 $(function() {
   var TodoItem = window.Component.create({
     _namespace: "todo-list",
+    _references: {
+      "done": ".todo-item-done"
+    },
     _events: {
       "change .todo-item-done": "toggle"
-    },
-    initialize: function(options) {
-      var self = this;
-      this.$done = this.$root.find(".todo-item-done");
     },
     toggle: function(data, event) {
       if (this.$done.is(":checked")) {
@@ -123,6 +146,13 @@ $(function() {
   });
   var TodoList = window.Component.create({
     _namespace: "todo-list",
+    _references: {
+      "items":    ".todo-item-list",
+      "total":    ".todo-list-total-count",
+      "done":     ".todo-list-done-count",
+      "content":  ".action-create [name=content]",
+      "template": ".todo-item-template"
+    },
     _events: {
       "click .action-delete"   : "removeItem",
       "submit .action-create"  : "addItem",
@@ -131,15 +161,11 @@ $(function() {
     initialize: function(options) {
       var self = this;
 
-      this.$items = this.$root.find(".todo-item-list");
-      this.$total = this.$root.find(".todo-list-total-count");
-      this.$done  = this.$root.find(".todo-list-done-count");
-      this.$content = this.$root.find(".action-create [name=content]");
-      this._template = this.$root.find(".todo-item-template").html();
+      this._template = this.$template.html();
     },
     addItem: function(data, event) {
       var $el = $(this._template),
-          content =(data && data.content) || this.$content.val();
+          content = (data && data.content) || this.$content.val();
 
       new TodoItem($el);
 
