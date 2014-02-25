@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" xml:lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ui-components</title>
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/components.js"></script>
+    <script type="text/javascript" src="js/todo.js"></script>
+    <link rel="stylesheet" href="css/article.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="css/todo.css" type="text/css" media="screen" />
+  </head>
+  <body>
+    <h1>Introduction</h1>
+    <p>Building reusable abstractions for browser-based frontends is a
+      widely addressed, but only partially solved problem.  Libraries
+      such as <a href="http://jqueryui.com">jQuery UI</a> provide
+      developers already with a useful collection of commonly used UI
+      elements.  This frees developers from having to implement, for
+      example, interactive date picker widgets and allows them to focus
+      more on the actual business logic.  However, such libraries come
+      at a price: as soon as something is required, which is not
+      provided by the library, things get messy.</p>
+    <p>The new requirement can be fulfilled by extending the library,
+      which requires knowledge of the library's inner workings.  The
+      benefit of this approach is consistency.  The newly developed
+      widget ideally behaves like the rest of the widgets provided by
+      the library.</p>
+    <p>Alternatively, the requirement can be fulfilled by
+      using <em>another</em> library or creating a custom
+      implementation.  This approach can quickly lead to an inconsistent
+      codebase but usually provides a faster way to a first
+      implementation (based on the assumption that writing code is
+      easier than reading it).</p>
+    <p>I propose a set of rules, which are not tied to any framework or
+    library, with the aim of facilitating the creation of reusable UI
+    components.  The secondary goal of these rules is to do this without
+    breaking <a href="http://alistapart.com/article/understandingprogressiveenhancement">progressive
+    enhancement</a>.</p>
+    <h1>The Rules</h1>
+    <ol>
+      <li>
+        <p>Only one piece of code is allowed to mutate a given subtree
+        of the DOM.  This is called <strong>owning</strong> a subtree.</p>
+        <p><em>Rationale</em>: the DOM is global state and accessible to
+        every piece of code.  As such, the usual principles for handling
+        global variables should be applied to prevent the problems
+        associated with global state.</p>
+      </li>
+      <li>
+        <p>All meaningful state is stored in the DOM.  Meaningful state
+        is state that carries a meaning for the application, e.g. for a
+        blogging application, state related to articles is most likely
+        considered meaningful.</p>
+        <p><em>Rationale</em>: Putting all meaningful state into the DOM
+        enables the server to generate the state, and the client to work
+        with this state.  It eliminates the need to serialize and
+        deserialize data (e.g. using JSON or XML).  Also, the user agent
+        does not need any capabilities beyond parsing HTML.</p>
+      </li>
+      <li>
+        <p>Pieces of code communicate through events, using the DOM as
+          the event bus.  Every public function should trigger events in
+          order to notify other parts of the application about the
+          function call.  Public functions should be invokable by
+          triggering the appropriate event on the element <em>owned</em>
+          by this piece of code.</p>
+        <p><em>Rationale</em>: Triggering events for every function call
+        on the DOM allows for easy delegation using event bubbling.  By
+        making every public function available through the DOM, the DOM
+        becomes the single interface to interact with the
+        application.</p>
+      </li>
+    </ol>
+    <h1>Example</h1>
+    <p>This is an example application built adhering to the rules
+      described above.  It is a simple todo list application, allowing
+      the creation and removal of todo items as well as marking them as
+      &quot;done&quot;.  The count of items marked as &quot;done&quot;
+      and the count of all items is display in the headline, next to the
+      word &quot;Todos&quot;.</p>
+    <div class="todo-application">
+      <div class="todo-list">
+        <!-- the template for new item -->
+        <script type="text/x-html" class="todo-item-template">
+          <li class="todo-item is-not-done">
+            <input type="checkbox" name="done" class="todo-item-done" />
+            <button class="action-delete">Remove</button>
+            <div class="todo-item-content">
+            </div>
+          </li>
+        </script>
+
+        <h1>Todos
+          <span class="todo-list-done-count">0</span>
+          / <span class="todo-list-total-count">0</span>
+        </h1>
+
+        <form class="todo-item action-create" method="POST" action="todos">
+          <fieldset>
+            <legend>Create a new todo item</legend>
+            <input type="hidden" name="_method" value="PUT" />
+            <input type="text" name="content" placeholder="Wash the dishes" />
+            <input type="submit" value="Add" />
+          </fieldset>
+        </form>
+
+        <ul class="todo-item-list">
+        </ul>
+      </div>
+    </div>
+    <h1>Implementation</h1>
+    <p><em>Note:</em> The implementation of the example presented above
+    follows progressive enhancement only partially: the creation of new
+    todo items is possible without JavaScript (given a matching server
+    backend), the modification and deletion of items is not.</p>
+    <p>The example application builds
+    on <a href="http://jquery.com">jQuery</a> for DOM manipulation and
+    event handling.  Components are defined using the
+    function <code>Component.create(definition)</code>, which returns a
+    constructor for a new UI component based on <code>definition</code>.
+    Here are parts of the definition of a single todo item:</p>
+      <pre><code><!--
+-->{
+  _namespace: "todo-list",
+  _references: {
+    "done": ".todo-item-done"
+  },
+  _events: {
+    "change .todo-item-done": "toggle"
+  },
+  toggle: function(data, event) {
+    if (this.$done.is(":checked")) {
+      this.markDone();
+    } else {
+      this.markNotDone();
+    }
+  },
+  markNotDone: function(data, event) {
+    this.$root.removeClass("is-done").addClass("is-not-done");
+  },
+  markDone: function(data, event) {
+    this.$root.addClass("is-done").removeClass("is-not-done");
+  },
+  remove: function(data, event) {
+    this.$root.remove();
+  }
+}
+</code></pre>
+    <p><code>Component.create</code> treats some of these keys specially:
+      <dl>
+        <dt><code>_namespace</code></dt>
+        <dd>This key specifies the namespace to use for binding
+        events.</dd>
+        <dt><code>_references</code></dt>
+        <dd>A map of identifiers to CSS selectors.  During the
+        initialization of a component, this map is used for creating
+        cached jQuery collections on the instance.  A dollar sign is
+        prefixed to the name to indicate this.  This is how the
+        variable <code>this.$done</code> is defined in the example
+        definition.</dd>
+        <dt><code>_events</code></dt>
+        <dd>A map of <code>(event, selector)</code>-tuples to method
+        names.  This map is used for setting up event handlers during
+        initialization.  In the example, the <code>toggle</code> method
+        is invoked when the <code>change</code> event is triggered by an
+          element in the todo item matching <code>.todo-item-done</code>.</dd>
+      </dl></p>
+    <p>All other keys starting with a lowercase letter and mapping to a
+    function are recognized as method definitions.  The method
+    definitions are wrapped to trigger events on the root DOM element of
+    the component instance whenever the method is called: one before the
+    method call (<code>before-$METHOD_NAME</code>) and one after the
+    method call (<code>after-$METHOD_NAME</code>).  Additionally, the
+    methods can be invoked by triggering a <code>do-$METHOD_NAME</code>
+    event on said DOM element.</p>
+    <footer>
+      <a rel="license"
+      href="http://creativecommons.org/licenses/by-sa/4.0/deed.en_US"><img alt="Creative
+      Commons License" style="border-width:0"
+      src="http://i.creativecommons.org/l/by-sa/4.0/88x31.png"
+      /></a><br /><span xmlns:dct="http://purl.org/dc/terms/"
+      property="dct:title">ui-components</span>
+      by <span xmlns:cc="http://creativecommons.org/ns#"
+      property="cc:attributionName">Dario Hamidi</span> is licensed
+      under a <a rel="license"
+      href="http://creativecommons.org/licenses/by-sa/4.0/deed.en_US">Creative
+      Commons Attribution-ShareAlike 4.0 International License</a>.
+    </footer>
+  </body>
+</html>
