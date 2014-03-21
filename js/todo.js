@@ -71,5 +71,4 @@ $(function() {
   window.Component.TodoList = TodoList;
 
   new TodoList(".todo-list");
-  window.$list = $(".todo-list");
 });

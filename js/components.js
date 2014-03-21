@@ -4,8 +4,7 @@
 
   function Component() {}
   Component.create = function(definition) {
-    var initializer = definition.initialize || $.noop,
-        constructor;
+    var initializer = definition.initialize || $.noop;
 
     delete definition.initialize;
 

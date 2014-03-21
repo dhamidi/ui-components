@@ -1,4 +1,4 @@
-/*global describe,it,beforeEach,afterEach,expect,spyOn,jasmine*/
+/*global describe,it,beforeEach,afterEach,expect,spyOn,jasmine,window*/
 describe("Component", function() {
   var C = window.Component.create({
     _namespace: "C",
