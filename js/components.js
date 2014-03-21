@@ -51,11 +51,12 @@
     var fn = this[method];
 
     this[method] = function(data, event) {
-      var retval;
+      var retval, context = { source: this };
 
-      this.$root.trigger("before-" + method, {source: this});
+      this.$root.trigger("before-" + method, context);
       retval = fn.call(this, data, event);
-      this.$root.trigger("after-" + method, {source: this});
+      context.returnValue = retval;
+      this.$root.trigger("after-" + method, context);
 
       return retval;
     };

@@ -95,11 +95,21 @@ describe("Component", function() {
         expect(spy).toHaveBeenCalled();
       });
 
-      it("triggers an event after calling a method", function() {
-        var spy = jasmine.createSpy("afterFoo");
-        this.$component.on("after-foo", spy);
-        this.instance.foo();
-        expect(spy).toHaveBeenCalled();
+      describe("the event after calling a method", function() {
+        it("is trigger after calling a method", function() {
+          var spy = jasmine.createSpy("afterFoo");
+          this.$component.on("after-foo", spy);
+          this.instance.foo();
+          expect(spy).toHaveBeenCalled();
+        });
+
+
+        it("contains the return value of the function", function() {
+          var spy = jasmine.createSpy("afterFoo");
+          this.$component.on("after-foo", spy);
+          this.instance.foo();
+          expect(spy).toHaveBeenCalledWith({source: this.instance, returnValue: 1});
+        });
       });
 
       it("provides the instance as 'source' to the event handler", function() {
